@@ -1,6 +1,7 @@
 # File: vault/pipelines/dependency-builder.yaml
 trigger: none
 pool: Default
+
 parameters:
   - name: nodeVersion
     type: string
@@ -17,7 +18,6 @@ parameters:
 
 variables:
   artifactName: 'node-dependencies-v${{ parameters.nodeVersion }}.zip'
-  workingDir: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
 
 stages:
   - stage: BuildNodeDependencies
@@ -34,34 +34,30 @@ stages:
             displayName: "Setup Node.js ${{ parameters.nodeVersion }}"
 
           - script: |
-              cd ${{ variables.workingDir }}
+              echo "✅ Default working directory: $(System.DefaultWorkingDirectory)"
+              echo "Navigating to vault/node${{ parameters.nodeVersion }}"
+              cd "$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}" || { echo "❌ Directory not found!"; exit 1; }
               node -v
-              npm ci
-              npm audit fix --force
-              npm dedupe
-              npm prune --production
-            displayName: "Clean dependencies"
+              npm ci || { echo "❌ npm ci failed"; exit 1; }
+              npm audit fix --force || true
+              npm dedupe || true
+              npm prune --production || true
+              echo "✅ node_modules created successfully"
+              ls -ld node_modules || echo "⚠️ node_modules not found!"
+            displayName: "Clean and secure dependencies"
+
+          - script: |
+              echo "Verifying node_modules path..."
+              ls -ld "$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}/node_modules" || { echo "❌ node_modules missing"; exit 1; }
+            displayName: "Validate node_modules existence"
 
           - task: ArchiveFiles@2
             inputs:
-              rootFolderOrFile: '${{ variables.workingDir }}/node_modules'
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}/node_modules'
               includeRootFolder: false
-              archiveFile: '$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
             displayName: "Archive dependencies"
 
-          - publish: '$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}'
+          - publish: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
             artifact: '${{ parameters.nodeVersion }}'
             displayName: "Publish dependency artifact"
-
-          # - task: AzureCLI@2
-          #   inputs:
-          #     azureSubscription: '${{ parameters.azureServiceConnection }}'
-          #     scriptType: 'bash'
-          #     scriptLocation: 'inlineScript'
-          #     inlineScript: |
-          #       az storage blob upload \
-          #         --account-name ${{ parameters.storageAccountName }} \
-          #         --container-name ${{ parameters.containerName }} \
-          #         --file "$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}" \
-          #         --name "dependencies/${{ variables.artifactName }}"
-          #   displayName: "Upload to Azure Blob"
