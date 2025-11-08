@@ -21,5 +21,17 @@ variables:
   storageContainer: 'node-vault'
   storageAccount: '<your-storage-account-name>'
 
-pool:
-  vmImage: 'ubuntu-latest'
+pool: Default
+stages:
+  - stage: 
+    jobs:
+      - job: 
+        steps:
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '$(nodeVersion)'
+
+
+
+  
