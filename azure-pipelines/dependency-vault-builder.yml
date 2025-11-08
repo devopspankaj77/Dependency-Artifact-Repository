@@ -78,10 +78,9 @@ stages:
           # 6️⃣ Publish Artifact for reuse
           - task: PublishPipelineArtifact@1
             inputs:
-              targetPath: '$(artifactDir)/$(artifactName)'
+              targetPath: '$(artifactDir)/node-dependencies'
               artifact: 'node-dependencies-v${{ parameters.nodeVersion }}'
             displayName: "Publish dependency artifact"
-
 
           # # 7️⃣ Optional - Upload to Azure Blob
           # - task: AzureCLI@2
