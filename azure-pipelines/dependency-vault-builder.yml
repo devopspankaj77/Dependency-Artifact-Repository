@@ -17,6 +17,10 @@ parameters:
     default: 'artifacts'
 
 variables:
+  defaultDir: '$(System.DefaultWorkingDirectory)'
+  nodeBaseDir: '$(defaultDir)/vault'
+  nodeWorkDir: '$(nodeBaseDir)/node${{ parameters.nodeVersion }}'
+  artifactDir: '$(Build.ArtifactStagingDirectory)'
   artifactName: 'node-dependencies-v${{ parameters.nodeVersion }}.zip'
 
 stages:
@@ -24,40 +28,65 @@ stages:
     displayName: "Build Node Dependencies"
     jobs:
       - job: Build
-        displayName: "Clean & Package Dependencies"
+        displayName: "Prepare and Publish Dependencies"
         steps:
           - checkout: self
 
+          # 1️⃣ Node Setup
           - task: NodeTool@0
             inputs:
               versionSpec: '${{ parameters.nodeVersion }}'
             displayName: "Setup Node.js ${{ parameters.nodeVersion }}"
 
-          - script: |
-              echo "✅ Default working directory: $(System.DefaultWorkingDirectory)"
-              echo "Navigating to vault/node${{ parameters.nodeVersion }}"
-              cd "$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}" || { echo "❌ Directory not found!"; exit 1; }
-              node -v
-              npm ci || { echo "❌ npm ci failed"; exit 1; }
-              npm audit fix --force || true
-              npm dedupe || true
-              npm prune --production || true
-              echo "✅ node_modules created successfully"
-              ls -ld node_modules || echo "⚠️ node_modules not found!"
-            displayName: "Clean and secure dependencies"
+          # 2️⃣ Install Dependencies
+          - task: Npm@1
+            inputs:
+              command: 'ci'
+              workingDir: '$(nodeWorkDir)'
+            displayName: "Install clean dependencies"
 
-          - script: |
-              echo "Verifying node_modules path..."
-              ls -ld "$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}/node_modules" || { echo "❌ node_modules missing"; exit 1; }
-            displayName: "Validate node_modules existence"
+          # 3️⃣ Optional - Audit Fix
+          - task: Npm@1
+            inputs:
+              command: 'custom'
+              workingDir: '$(nodeWorkDir)'
+              customCommand: 'audit fix --force'
+            displayName: "Security audit fix"
 
+          # 4️⃣ Optional - Prune Production
+          - task: Npm@1
+            inputs:
+              command: 'custom'
+              workingDir: '$(nodeWorkDir)'
+              customCommand: 'prune --production'
+            displayName: "Prune dev dependencies"
+
+          # 5️⃣ Archive Clean Dependencies
           - task: ArchiveFiles@2
             inputs:
-              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}/node_modules'
+              rootFolderOrFile: '$(nodeWorkDir)/node_modules'
               includeRootFolder: false
-              archiveFile: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
+              archiveFile: '$(artifactDir)/$(artifactName)'
             displayName: "Archive dependencies"
 
-          - publish: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
-            artifact: '${{ parameters.nodeVersion }}'
+          # 6️⃣ Publish Artifact for reuse
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(artifactDir)/$(artifactName)'
+              artifact: 'node-dependencies-v${{ parameters.nodeVersion }}'
             displayName: "Publish dependency artifact"
+
+          # # 7️⃣ Optional - Upload to Azure Blob
+          # - task: AzureCLI@2
+          #   condition: succeeded()
+          #   inputs:
+          #     azureSubscription: '${{ parameters.azureServiceConnection }}'
+          #     scriptType: 'bash'
+          #     scriptLocation: 'inlineScript'
+          #     inlineScript: |
+          #       az storage blob upload \
+          #         --account-name ${{ parameters.storageAccountName }} \
+          #         --container-name ${{ parameters.containerName }} \
+          #         --file "$(artifactDir)/$(artifactName)" \
+          #         --name "dependencies/$(artifactName)"
+          #   displayName: "Upload artifact to Azure Blob"
