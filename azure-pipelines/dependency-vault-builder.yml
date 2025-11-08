@@ -1,98 +1,164 @@
-# File: vault/pipelines/dependency-builder.yaml
+# # File: vault/pipelines/dependency-builder.yaml
+# trigger: none
+# pool: Default
+
+# parameters:
+#   - name: nodeVersion
+#     type: string
+#     default: '18'
+#   - name: azureServiceConnection
+#     type: string
+#     default: 'MyServiceConnection'
+#   - name: storageAccountName
+#     type: string
+#     default: 'mystorageacct'
+#   - name: containerName
+#     type: string
+#     default: 'artifacts'
+
+# variables:
+#   defaultDir: '$(System.DefaultWorkingDirectory)'
+#   nodeBaseDir: '$(defaultDir)/vault'
+#   nodeWorkDir: '$(nodeBaseDir)/node${{ parameters.nodeVersion }}'
+#   artifactDir: '$(Build.ArtifactStagingDirectory)'
+#   artifactName: 'node-dependencies-v${{ parameters.nodeVersion }}.zip'
+#   rootFolderOrFile: '$(nodeWorkDir)'
+# stages:
+#   - stage: BuildNodeDependencies
+#     displayName: "Build Node Dependencies"
+#     jobs:
+#       - job: Build
+#         displayName: "Prepare and Publish Dependencies"
+#         steps:
+#           - checkout: self
+
+#           # 1️⃣ Node Setup
+#           - task: NodeTool@0
+#             inputs:
+#               versionSpec: '${{ parameters.nodeVersion }}'
+#             displayName: "Setup Node.js ${{ parameters.nodeVersion }}"
+
+#           # 2️⃣ Install Dependencies
+#           - task: Npm@1
+#             inputs:
+#               command: 'ci'
+#               workingDir: '$(nodeWorkDir)'
+#             displayName: "Install clean dependencies"
+
+#           # 3️⃣ Optional - Audit Fix
+#           - task: Npm@1
+#             inputs:
+#               command: 'custom'
+#               workingDir: '$(nodeWorkDir)'
+#               customCommand: 'audit fix --force'
+#             displayName: "Security audit fix"
+
+#           # 4️⃣ Optional - Prune Production
+#           - task: Npm@1
+#             inputs:
+#               command: 'custom'
+#               workingDir: '$(nodeWorkDir)'
+#               customCommand: 'prune --production'
+#             displayName: "Prune dev dependencies"
+
+#           # 5️⃣ Archive Clean Dependencies
+#           - task: ArchiveFiles@2
+#             inputs:
+#               rootFolderOrFile: '$(nodeWorkDir)/node_modules'
+#               includeRootFolder: false
+#               archiveFile: '$(artifactDir)/node-dependencies/$(artifactName)'
+#             displayName: "Archive dependencies"
+
+#           # 5.5️⃣ Verify
+#           - script: |
+#               echo "Verifying artifact directory..."
+#               ls -Rlh $(artifactDir)
+#             displayName: "Verify artifact presence"
+
+#           # 6️⃣ Publish Artifact for reuse
+#           - task: PublishPipelineArtifact@1
+#             inputs:
+#               targetPath: '$(artifactDir)/node-dependencies'
+#               artifact: 'node-dependencies-v${{ parameters.nodeVersion }}'
+#             displayName: "Publish dependency artifact"
+
+#           # # 7️⃣ Optional - Upload to Azure Blob
+#           # - task: AzureCLI@2
+#           #   condition: succeeded()
+#           #   inputs:
+#           #     azureSubscription: '${{ parameters.azureServiceConnection }}'
+#           #     scriptType: 'bash'
+#           #     scriptLocation: 'inlineScript'
+#           #     inlineScript: |
+#           #       az storage blob upload \
+#           #         --account-name ${{ parameters.storageAccountName }} \
+#           #         --container-name ${{ parameters.containerName }} \
+#           #         --file "$(artifactDir)/$(artifactName)" \
+#           #         --name "dependencies/$(artifactName)"
+#           #   displayName: "Upload artifact to Azure Blob"
+
+
+
+# File: azure-pipelines/dependency-vault-builder.yml
 trigger: none
 pool: Default
 
 parameters:
   - name: nodeVersion
     type: string
-    default: '18'
+    default: '18'                  # Node version to build for
+  - name: feedName
+    type: string
+    default: 'dependency-store'    # Azure Artifacts feed name
   - name: azureServiceConnection
     type: string
-    default: 'MyServiceConnection'
-  - name: storageAccountName
-    type: string
-    default: 'mystorageacct'
-  - name: containerName
-    type: string
-    default: 'artifacts'
+    default: 'MyServiceConnection' # (optional for Blob upload later)
 
 variables:
-  defaultDir: '$(System.DefaultWorkingDirectory)'
-  nodeBaseDir: '$(defaultDir)/vault'
-  nodeWorkDir: '$(nodeBaseDir)/node${{ parameters.nodeVersion }}'
+  nodeWorkDir: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
   artifactDir: '$(Build.ArtifactStagingDirectory)'
   artifactName: 'node-dependencies-v${{ parameters.nodeVersion }}.zip'
-  rootFolderOrFile: '$(nodeWorkDir)'
+  packageName: 'node-dependencies-v${{ parameters.nodeVersion }}'
+  packageVersion: '${{ parameters.nodeVersion }}.0.0'   # ← version tied to Node only
+
 stages:
   - stage: BuildNodeDependencies
-    displayName: "Build Node Dependencies"
+    displayName: "Build Clean Node Dependencies"
     jobs:
       - job: Build
-        displayName: "Prepare and Publish Dependencies"
+        displayName: "Prepare & Publish Dependencies"
         steps:
           - checkout: self
 
-          # 1️⃣ Node Setup
+          # 1️⃣ Setup Node version
           - task: NodeTool@0
             inputs:
               versionSpec: '${{ parameters.nodeVersion }}'
             displayName: "Setup Node.js ${{ parameters.nodeVersion }}"
 
-          # 2️⃣ Install Dependencies
-          - task: Npm@1
-            inputs:
-              command: 'ci'
-              workingDir: '$(nodeWorkDir)'
-            displayName: "Install clean dependencies"
-
-          # 3️⃣ Optional - Audit Fix
-          - task: Npm@1
-            inputs:
-              command: 'custom'
-              workingDir: '$(nodeWorkDir)'
-              customCommand: 'audit fix --force'
-            displayName: "Security audit fix"
-
-          # 4️⃣ Optional - Prune Production
-          - task: Npm@1
-            inputs:
-              command: 'custom'
-              workingDir: '$(nodeWorkDir)'
-              customCommand: 'prune --production'
-            displayName: "Prune dev dependencies"
-
-          # 5️⃣ Archive Clean Dependencies
-          - task: ArchiveFiles@2
-            inputs:
-              rootFolderOrFile: '$(nodeWorkDir)/node_modules'
-              includeRootFolder: false
-              archiveFile: '$(artifactDir)/node-dependencies/$(artifactName)'
-            displayName: "Archive dependencies"
-
-          # 5.5️⃣ Verify
+          # 2️⃣ Clean install & secure dependencies
           - script: |
-              echo "Verifying artifact directory..."
-              ls -Rlh $(artifactDir)
-            displayName: "Verify artifact presence"
+              cd $(nodeWorkDir)
+              echo "🔹 Installing dependencies for Node ${{ parameters.nodeVersion }}"
+              npm ci
+              echo "🔹 Running audit fix..."
+              npm audit fix --force || true
+              echo "🔹 Pruning dev dependencies..."
+              npm prune --production
+              echo "🔹 Deduping..."
+              npm dedupe
+              echo "🔹 Creating ZIP archive..."
+              zip -rq $(artifactDir)/$(artifactName) node_modules
+            displayName: "Clean and Package dependencies"
 
-          # 6️⃣ Publish Artifact for reuse
-          - task: PublishPipelineArtifact@1
+          # 3️⃣ Publish to Azure Artifacts Feed
+          - task: UniversalPackages@0
             inputs:
-              targetPath: '$(artifactDir)/node-dependencies'
-              artifact: 'node-dependencies-v${{ parameters.nodeVersion }}'
-            displayName: "Publish dependency artifact"
-
-          # # 7️⃣ Optional - Upload to Azure Blob
-          # - task: AzureCLI@2
-          #   condition: succeeded()
-          #   inputs:
-          #     azureSubscription: '${{ parameters.azureServiceConnection }}'
-          #     scriptType: 'bash'
-          #     scriptLocation: 'inlineScript'
-          #     inlineScript: |
-          #       az storage blob upload \
-          #         --account-name ${{ parameters.storageAccountName }} \
-          #         --container-name ${{ parameters.containerName }} \
-          #         --file "$(artifactDir)/$(artifactName)" \
-          #         --name "dependencies/$(artifactName)"
-          #   displayName: "Upload artifact to Azure Blob"
+              command: publish
+              publishDirectory: '$(artifactDir)'
+              feedsToUse: internal
+              vstsFeedPublish: '${{ parameters.feedName }}'
+              packagePublishDescription: 'Cleaned dependencies for Node.js ${{ parameters.nodeVersion }}'
+              packageName: '$(packageName)'
+              packageVersion: '$(packageVersion)'
+            displayName: "Publish to Azure Artifacts Feed"
