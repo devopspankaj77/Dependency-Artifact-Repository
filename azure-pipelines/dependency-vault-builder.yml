@@ -42,6 +42,22 @@ stages:
               echo "Deduping & pruning..."
               npm dedupe
               npm prune --production
+        - task: CmdLine@2
+          inputs:
+            script: 'npm audit --json > audit-report.json || true'
+            workingDirectory: 'vault/node$(nodeVersion)'
+        - task: CmdLine@2
+          inputs:
+            script: |
+              tar -czf node-vault-node$(nodeVersion).tar.gz -C vault/node$(nodeVersion) node_modules package.json package-lock.json audit-report.json
+              mkdir -p $(Build.ArtifactStagingDirectory)
+              mv node-vault-node$(nodeVersion).tar.gz $(Build.ArtifactStagingDirectory)/
+        - task: CmdLine@2
+          inputs:
+            script: |
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: '$(artifactName)'
+              publishLocation: 'Container'
 
 
 
