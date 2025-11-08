@@ -1,64 +1,67 @@
-trigger:
-  branches:
-    include:
-      - main
-      - releases/*
-      - feature/*
-pr:
-  branches:
-    include:
-      - main
-      - releases/*
-      - feature/*
+# File: vault/pipelines/dependency-builder.yaml
+trigger: none
+
 parameters:
   - name: nodeVersion
     type: string
     default: '18'
-    displayName: 'Node.js Version'
+  - name: azureServiceConnection
+    type: string
+    default: 'MyServiceConnection'
+  - name: storageAccountName
+    type: string
+    default: 'mystorageacct'
+  - name: containerName
+    type: string
+    default: 'artifacts'
 
 variables:
-  artifactName: 'node-vault-$(nodeVersion)'
-  storageContainer: 'node-vault'
-  storageAccount: '<your-storage-account-name>'
+  artifactName: 'node-dependencies-v${{ parameters.nodeVersion }}.zip'
+  workingDir: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
 
-pool: Default
 stages:
-  - stage: 
+  - stage: BuildNodeDependencies
+    displayName: "Build Node Dependencies"
     jobs:
-      - job: 
+      - job: Build
+        displayName: "Clean & Package Dependencies"
         steps:
-        - task: NodeTool@0
-          inputs:
-            versionSource: 'spec'
-            versionSpec: '${{ parameters.nodeVersion }}'
-        - task: CmdLine@2
-          inputs:
-            script: |
-              cd vault/node$(nodeVersion)
-              echo "Installing dependencies..."
+          - checkout: self
+
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '${{ parameters.nodeVersion }}'
+            displayName: "Setup Node.js ${{ parameters.nodeVersion }}"
+
+          - script: |
+              cd ${{ variables.workingDir }}
+              node -v
               npm ci
-              echo "Running audit fix..."
               npm audit fix --force
-              echo "Deduping & pruning..."
               npm dedupe
               npm prune --production
-        - task: CmdLine@2
-          inputs:
-            script: 'npm audit --json > audit-report.json || true'
-            workingDirectory: 'vault/node$(nodeVersion)'
-        - task: CmdLine@2
-          inputs:
-            script: |
-              tar -czf node-vault-node$(nodeVersion).tar.gz -C vault/node$(nodeVersion) node_modules package.json package-lock.json audit-report.json
-              mkdir -p $(Build.ArtifactStagingDirectory)
-              mv node-vault-node$(nodeVersion).tar.gz $(Build.ArtifactStagingDirectory)/
-        - task: CmdLine@2
-          inputs:
-            script: |
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: '$(artifactName)'
-              publishLocation: 'Container'
+            displayName: "Clean dependencies"
 
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '${{ variables.workingDir }}/node_modules'
+              includeRootFolder: false
+              archiveFile: '$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}'
+            displayName: "Archive dependencies"
 
+          - publish: '$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}'
+            artifact: '${{ parameters.nodeVersion }}'
+            displayName: "Publish dependency artifact"
 
-  
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: '${{ parameters.azureServiceConnection }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az storage blob upload \
+                  --account-name ${{ parameters.storageAccountName }} \
+                  --container-name ${{ parameters.containerName }} \
+                  --file "$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}" \
+                  --name "dependencies/${{ variables.artifactName }}"
+            displayName: "Upload to Azure Blob"
