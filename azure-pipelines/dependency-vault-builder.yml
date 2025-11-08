@@ -30,7 +30,7 @@ stages:
         - task: NodeTool@0
           inputs:
             versionSource: 'spec'
-            versionSpec: '$(nodeVersion)'
+            versionSpec: '${{ parameters.nodeVersion }}'
 
 
 
