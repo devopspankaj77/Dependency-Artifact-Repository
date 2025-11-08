@@ -1,0 +1,11 @@
+{
+  "name": "@org/node20-deps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Approved production dependencies for Node 20 apps",
+  "dependencies": {
+    "express": "^4.21.0",
+    "axios": "^1.7.4",
+    "dotenv": "^16.4.5"
+  }
+}
