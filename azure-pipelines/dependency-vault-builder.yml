@@ -53,15 +53,15 @@ stages:
             artifact: '${{ parameters.nodeVersion }}'
             displayName: "Publish dependency artifact"
 
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: '${{ parameters.azureServiceConnection }}'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az storage blob upload \
-                  --account-name ${{ parameters.storageAccountName }} \
-                  --container-name ${{ parameters.containerName }} \
-                  --file "$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}" \
-                  --name "dependencies/${{ variables.artifactName }}"
-            displayName: "Upload to Azure Blob"
+          # - task: AzureCLI@2
+          #   inputs:
+          #     azureSubscription: '${{ parameters.azureServiceConnection }}'
+          #     scriptType: 'bash'
+          #     scriptLocation: 'inlineScript'
+          #     inlineScript: |
+          #       az storage blob upload \
+          #         --account-name ${{ parameters.storageAccountName }} \
+          #         --container-name ${{ parameters.containerName }} \
+          #         --file "$(Build.ArtifactStagingDirectory)/${{ variables.artifactName }}" \
+          #         --name "dependencies/${{ variables.artifactName }}"
+          #   displayName: "Upload to Azure Blob"
