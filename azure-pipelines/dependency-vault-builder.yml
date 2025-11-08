@@ -1,6 +1,6 @@
 # File: vault/pipelines/dependency-builder.yaml
 trigger: none
-
+pool: Default
 parameters:
   - name: nodeVersion
     type: string
