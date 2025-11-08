@@ -162,3 +162,5 @@ stages:
               packageName: '$(packageName)'
               packageVersion: '$(packageVersion)'
             displayName: "Publish to Azure Artifacts Feed"
+
+    
