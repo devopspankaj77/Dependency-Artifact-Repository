@@ -31,6 +31,17 @@ stages:
           inputs:
             versionSource: 'spec'
             versionSpec: '${{ parameters.nodeVersion }}'
+        - task: CmdLine@2
+          inputs:
+            script: |
+              cd vault/node$(nodeVersion)
+              echo "Installing dependencies..."
+              npm ci
+              echo "Running audit fix..."
+              npm audit fix --force
+              echo "Deduping & pruning..."
+              npm dedupe
+              npm prune --production
 
 
 
