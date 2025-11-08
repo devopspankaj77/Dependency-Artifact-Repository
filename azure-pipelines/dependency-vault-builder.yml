@@ -2,6 +2,8 @@
 # trigger: none
 # pool: Default
 
+
+
 # parameters:
 #   - name: nodeVersion
 #     type: string
@@ -102,6 +104,7 @@
 # File: azure-pipelines/dependency-vault-builder.yml
 trigger: none
 pool: Default
+
 
 parameters:
   - name: nodeVersion
