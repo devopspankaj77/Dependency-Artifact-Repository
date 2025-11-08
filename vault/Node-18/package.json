@@ -1,0 +1,11 @@
+{
+  "name": "@org/node18-deps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Approved production dependencies for Node 18 apps",
+  "dependencies": {
+    "express": "^4.19.0",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.1"
+  }
+}

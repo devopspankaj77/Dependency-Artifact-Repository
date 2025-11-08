@@ -1,0 +1,25 @@
+trigger:
+  branches:
+    include:
+      - main
+      - releases/*
+      - feature/*
+pr:
+  branches:
+    include:
+      - main
+      - releases/*
+      - feature/*
+parameters:
+  - name: nodeVersion
+    type: string
+    default: '18'
+    displayName: 'Node.js Version'
+
+variables:
+  artifactName: 'node-vault-$(nodeVersion)'
+  storageContainer: 'node-vault'
+  storageAccount: '<your-storage-account-name>'
+
+pool:
+  vmImage: 'ubuntu-latest'
