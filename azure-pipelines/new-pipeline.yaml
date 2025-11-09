@@ -26,3 +26,7 @@ steps:
   inputs:
     versionSource: 'spec'
     versionSpec: '${{parameters.nodeVersion}}'
+- task: CmdLine@2
+  inputs:
+    script: 'npm install'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}'
