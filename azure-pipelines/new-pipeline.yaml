@@ -17,5 +17,9 @@ variables:
   storageAccountName: 'mystorageaccount'
   containerName: 'node-deps'
   blobFileName: node$(nodeVersion).zip
-  localartifactPath:
+steps:
+- task: Npm@1
+  inputs:
+    command: 'install'
+    workingDir: 'defaultDir/vault/node$(nodeVersion)'
     
