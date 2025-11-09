@@ -36,4 +36,5 @@ steps:
     script: |
       npm prune --production
       zip -r node${{ parameters.nodeVersion }}.zip node_modules/
-    workingDirectory: (System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}'$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}
+    workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
+  
