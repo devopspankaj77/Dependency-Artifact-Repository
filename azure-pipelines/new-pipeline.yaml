@@ -22,7 +22,7 @@ steps:
 - task: NodeTool@0
   inputs:
     versionSource: 'spec'
-    versionSpec: 'node${{parameters.nodeVersion}}'
+    versionSpec: '${{parameters.nodeVersion}}'
 - task: Npm@1
   inputs:
     command: 'install'
