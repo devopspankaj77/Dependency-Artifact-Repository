@@ -83,13 +83,22 @@ stages:
               targetPath: '$(artifactDir)/node-dependencies'
               artifact: 'node-dependencies-v${{ parameters.nodeVersion }}'
             displayName: "Publish dependency artifact"
-
-          
+          - task: UniversalPackages@0
+            inputs:
+              command: 'publish'
+              publishDirectory: '$(artifactDir)/node-dependencies'
+              feedsToUsePublish: 'internal'
+              vstsFeedPublish: 'f5a07582-2cdb-473c-b75c-0f09a48bf36f/75975362-5114-4766-bc64-2248e6652c8a'
+              vstsFeedPackagePublish: 'node-dependencies-v${{ parameters.nodeVersion }}'
+              versionOption: 'patch'
+                    
           - task: DownloadPipelineArtifact@2
             displayName: 'Download Build Artifacts'
             inputs:
               patterns: '**/*.zip'
               path: '$(Build.ArtifactStagingDirectory)'
+      
+
 
 #           # # 7️⃣ Optional - Upload to Azure Blob
 #           # - task: AzureCLI@2
