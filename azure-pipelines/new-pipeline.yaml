@@ -1,0 +1,21 @@
+trigger: 
+  branches:
+    include:
+      - main
+      - releases/*
+pool: Default
+parameters:
+  - name: nodeVersion
+    type: string
+    values:
+      - '18'
+      - '20'
+      - "16"
+variables:
+  defaultDir: '$(System.DefaultWorkingDirectory)'
+  artifactDir: '$(Build.ArtifactStagingDirectory)'
+  storageAccountName: 'mystorageaccount'
+  containerName: 'node-deps'
+  blobFileName: node$(nodeVersion).zip
+  localartifactPath:
+    
