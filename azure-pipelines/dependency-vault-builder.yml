@@ -84,6 +84,13 @@ stages:
               artifact: 'node-dependencies-v${{ parameters.nodeVersion }}'
             displayName: "Publish dependency artifact"
 
+          
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download Build Artifacts'
+            inputs:
+              patterns: '**/*.zip'
+              path: '$(Build.ArtifactStagingDirectory)'
+
 #           # # 7️⃣ Optional - Upload to Azure Blob
 #           # - task: AzureCLI@2
 #           #   condition: succeeded()
