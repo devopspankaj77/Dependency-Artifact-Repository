@@ -12,19 +12,12 @@ parameters:
       - '18'
       - '20'
       - "16"
-variables:
-  defaultDir: '$(System.DefaultWorkingDirectory)'
-  artifactDir: '$(Build.ArtifactStagingDirectory)'
-  storageAccountName: 'mystorageaccount'
-  containerName: 'node-deps'
-  blobFileName: node${{parameters.nodeVersion}}.zip
+# variables:
+  
 steps:
 - task: NodeTool@0
   inputs:
     versionSource: 'spec'
     versionSpec: '${{parameters.nodeVersion}}'
-- task: Npm@1
-  inputs:
-    command: 'install'
-    workingDir: 'defaultDir/vault/node${{parameters.nodeVersion}}'
+
     
