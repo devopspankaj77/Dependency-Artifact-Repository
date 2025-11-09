@@ -7,6 +7,7 @@ pool: Default
 parameters:
   - name: nodeVersion
     type: string
+    default: '18'
     values:
       - '18'
       - '20'
@@ -18,6 +19,10 @@ variables:
   containerName: 'node-deps'
   blobFileName: node$(nodeVersion).zip
 steps:
+- task: NodeTool@0
+  inputs:
+    versionSource: 'spec'
+    versionSpec: 'node$(nodeVersion)'
 - task: Npm@1
   inputs:
     command: 'install'
