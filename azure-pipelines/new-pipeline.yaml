@@ -26,5 +26,5 @@ steps:
 - task: Npm@1
   inputs:
     command: 'install'
-    workingDir: 'defaultDir/vault/node$(nodeVersion)'
+    workingDir: 'defaultDir/vault/node${{parameters.nodeVersion}}'
     
