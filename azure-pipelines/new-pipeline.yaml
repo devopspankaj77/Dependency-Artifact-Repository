@@ -17,12 +17,12 @@ variables:
   artifactDir: '$(Build.ArtifactStagingDirectory)'
   storageAccountName: 'mystorageaccount'
   containerName: 'node-deps'
-  blobFileName: node$(nodeVersion).zip
+  blobFileName: node${{parameters.nodeVersion}}.zip
 steps:
 - task: NodeTool@0
   inputs:
     versionSource: 'spec'
-    versionSpec: 'node$(nodeVersion)'
+    versionSpec: 'node${{parameters.nodeVersion}}'
 - task: Npm@1
   inputs:
     command: 'install'
