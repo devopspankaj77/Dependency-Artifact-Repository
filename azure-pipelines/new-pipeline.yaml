@@ -1,28 +1,59 @@
-trigger: 
+trigger:
   branches:
     include:
       - main
-      - releases/*
-pool: Default
+
 parameters:
   - name: nodeVersion
+    displayName: "Select Node Version"
     type: string
     default: '18'
     values:
+      - '16'
       - '18'
       - '20'
-      - "16"
-# variables:
-  
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSource: 'spec'
-    versionSpec: '${{parameters.nodeVersion}}'
-- task: NodeTool@0
-  inputs:
-    versionSource: 'spec'
-    versionSpec: '${{parameters.nodeVersion}}'
-    nodejsMirror: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}'
 
-    
+pool: Default
+
+
+variables:
+  storageAccountName: 'mystorageaccount'
+  containerName: 'node-deps'
+  blobFileName: 'node$(nodeVersion).zip'
+  workDir: '$(System.DefaultWorkingDirectory)'
+
+steps:
+# 1️⃣ Node install karo (parameter se version)
+- task: NodeTool@0
+  inputs:
+    versionSpec: ${{ parameters.nodeVersion }}
+  displayName: 'Install Node.js $(nodeVersion)'
+
+# 2️⃣ Dependencies install karo
+- script: |
+    echo "📦 Installing dependencies..."
+    npm install
+  displayName: 'Install dependencies'
+
+# 3️⃣ DevDependencies hatao aur zip banao
+- script: |
+    echo "🧹 Cleaning dev dependencies..."
+    npm prune --production
+    zip -r node${{ parameters.nodeVersion }}.zip node_modules/
+  displayName: 'Clean and Package dependencies'
+
+# # 4️⃣ Azure CLI task se Blob upload karo
+# - task: AzureCLI@2
+#   inputs:
+#     azureSubscription: 'MyAzureServiceConnection'   # <-- yahan apna service connection name daalna
+#     scriptType: 'bash'
+#     scriptLocation: 'inlineScript'
+#     inlineScript: |
+#       echo "☁️ Uploading to Blob Storage..."
+#       az storage blob upload \
+#         --account-name $(storageAccountName) \
+#         --container-name $(containerName) \
+#         --file node${{ parameters.nodeVersion }}.zip \
+#         --name node${{ parameters.nodeVersion }}.zip \
+#         --overwrite true
+#   displayName: 'Upload cleaned deps to Azure Blob'
