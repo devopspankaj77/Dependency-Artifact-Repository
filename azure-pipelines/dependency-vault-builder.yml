@@ -91,29 +91,39 @@ stages:
               vstsFeedPublish: 'f5a07582-2cdb-473c-b75c-0f09a48bf36f/75975362-5114-4766-bc64-2248e6652c8a'
               vstsFeedPackagePublish: 'node-dependencies-v${{ parameters.nodeVersion }}'
               versionOption: 'patch'
+          
                     
           - task: DownloadPipelineArtifact@2
             displayName: 'Download Build Artifacts'
             inputs:
               patterns: '**/*.zip'
               path: '$(Build.ArtifactStagingDirectory)'
+
+          - task: UniversalPackages@0
+            inputs:
+              command: 'download'
+              downloadDirectory: '$(Build.ArtifactStagingDirectory)'
+              feedsToUse: 'internal'
+              vstsFeed: 'f5a07582-2cdb-473c-b75c-0f09a48bf36f/75975362-5114-4766-bc64-2248e6652c8a'
+              vstsFeedPackage: '65f33a25-2a17-4401-80bb-3ca665e7f361'
+              vstsPackageVersion: '0.0.1'
       
 
 
-#           # # 7️⃣ Optional - Upload to Azure Blob
-#           # - task: AzureCLI@2
-#           #   condition: succeeded()
-#           #   inputs:
-#           #     azureSubscription: '${{ parameters.azureServiceConnection }}'
-#           #     scriptType: 'bash'
-#           #     scriptLocation: 'inlineScript'
-#           #     inlineScript: |
-#           #       az storage blob upload \
-#           #         --account-name ${{ parameters.storageAccountName }} \
-#           #         --container-name ${{ parameters.containerName }} \
-#           #         --file "$(artifactDir)/$(artifactName)" \
-#           #         --name "dependencies/$(artifactName)"
-#           #   displayName: "Upload artifact to Azure Blob"
+          # 7️⃣ Optional - Upload to Azure Blob
+          # - task: AzureCLI@2
+          #   condition: succeeded()
+          #   inputs:
+          #     azureSubscription: '${{ parameters.azureServiceConnection }}'
+          #     scriptType: 'bash'
+          #     scriptLocation: 'inlineScript'
+          #     inlineScript: |
+          #       az storage blob upload \
+          #         --account-name ${{ parameters.storageAccountName }} \
+          #         --container-name ${{ parameters.containerName }} \
+          #         --file "$(artifactDir)/$(artifactName)" \
+          #         --name "dependencies/$(artifactName)"
+          #   displayName: "Upload artifact to Azure Blob"
 
 
 
