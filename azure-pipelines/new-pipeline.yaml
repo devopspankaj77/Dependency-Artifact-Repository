@@ -25,5 +25,4 @@ steps:
 - task: NodeTool@0
   inputs:
     versionSource: 'spec'
-    versionSpec: 'node${{parameters.nodeVersion}}'
-    nodejsMirror: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}'
+    versionSpec: '${{parameters.nodeVersion}}'
