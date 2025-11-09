@@ -19,5 +19,9 @@ steps:
   inputs:
     versionSource: 'spec'
     versionSpec: '${{parameters.nodeVersion}}'
+- task: NodeTool@0
+  inputs:
+    versionSource: 'spec'
+    versionSpec: '''${{parameters.nodeVersion}}'''
 
     
