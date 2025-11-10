@@ -40,3 +40,10 @@ steps:
       npm prune --production
       zip -r node${{ parameters.nodeVersion }}.zip node_modules/
     workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}/node_modules'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
+    replaceExistingArchive: true
