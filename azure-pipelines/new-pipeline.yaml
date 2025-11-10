@@ -30,11 +30,13 @@ steps:
   inputs:
     script: 'npm install'
     workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}'
-
+- task: CmdLine@2
+  inputs:
+    script: 'audit fix --force'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
 - task: CmdLine@2
   inputs:
     script: |
       npm prune --production
       zip -r node${{ parameters.nodeVersion }}.zip node_modules/
     workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
-  
