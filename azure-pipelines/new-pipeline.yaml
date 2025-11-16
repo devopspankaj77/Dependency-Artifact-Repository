@@ -22,28 +22,36 @@ variables:
   blobFileName: 'node$(nodeVersion).zip'
   workDir: '$(System.DefaultWorkingDirectory)'
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSource: 'spec'
-    versionSpec: '${{parameters.nodeVersion}}'
-- task: CmdLine@2
-  inputs:
-    script: 'npm install'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}'
-- task: CmdLine@2
-  inputs:
-    script: 'audit fix --force'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
-- task: CmdLine@2
-  inputs:
-    script: |
-      npm prune --production
-      zip -r node${{ parameters.nodeVersion }}.zip node_modules/
-    workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
+# - task: NodeTool@0
+#   inputs:
+#     versionSource: 'spec'
+#     versionSpec: '${{parameters.nodeVersion}}'
+# - task: CmdLine@2
+#   inputs:
+#     script: 'npm install'
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}'
+# - task: CmdLine@2
+#   inputs:
+#     script: 'audit fix --force'
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
+# - task: CmdLine@2
+#   inputs:
+#     script: |
+#       npm prune --production
+#       zip -r node${{ parameters.nodeVersion }}.zip node_modules/
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/vault/node${{ parameters.nodeVersion }}'
+# - task: ArchiveFiles@2
+#   inputs:
+#     rootFolderOrFile: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}/node_modules'
+#     includeRootFolder: true
+#     archiveType: 'zip'
+#     archiveFile: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
+#     replaceExistingArchive: true
+
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}/node_modules'
-    includeRootFolder: true
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
-    replaceExistingArchive: true
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)/vault/node${{parameters.nodeVersion}}/node_modules'
+      includeRootFolder: true
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/node-dependencies-v${{ parameters.nodeVersion }}.zip'
+      replaceExistingArchive: true
